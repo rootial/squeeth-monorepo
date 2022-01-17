@@ -10,12 +10,14 @@ import { fromTokenAmount, toTokenAmount } from '@utils/calculations'
 import { useAddresses } from '../useAddress'
 import { useController } from './useController'
 import { useSqueethPool } from './useSqueethPool'
+import { getSellParam, getBuyParam } from '../../lib/squeethPool'
 
 export const useShortHelper = () => {
   const { web3, address, handleTransaction } = useWallet()
   const [contract, setContract] = useState<Contract>()
 
-  const { getSellParam, getBuyParam } = useSqueethPool()
+  const { pool, wethToken, squeethToken } = useSqueethPool()
+  // const { getSellParam, getBuyParam } = useSqueethPool()
   const { normFactor: normalizationFactor } = useController()
   const { shortHelper } = useAddresses()
 
@@ -32,9 +34,9 @@ export const useShortHelper = () => {
    * @returns
    */
   const openShort = async (vaultId: number, amount: BigNumber, collatAmount: BigNumber) => {
-    if (!contract || !address) return
+    if (!contract || !address || !pool || !wethToken || !squeethToken) return
 
-    const _exactInputParams = await getSellParam(amount)
+    const _exactInputParams = await getSellParam({ amount, pool, wethToken, squeethToken, address })
     _exactInputParams.recipient = shortHelper
 
     const _amount = fromTokenAmount(amount, OSQUEETH_DECIMALS).multipliedBy(normalizationFactor)
@@ -56,11 +58,11 @@ export const useShortHelper = () => {
    * @returns
    */
   const closeShort = async (vaultId: number, amount: BigNumber, withdrawAmt: BigNumber) => {
-    if (!contract || !address) return
+    if (!contract || !address || !pool || !wethToken || !squeethToken) return
 
     const _amount = fromTokenAmount(amount, OSQUEETH_DECIMALS)
     const _withdrawAmt = fromTokenAmount(withdrawAmt.isPositive() ? withdrawAmt : 0, WETH_DECIMALS)
-    const _exactOutputParams = await getBuyParam(amount)
+    const _exactOutputParams = await getBuyParam({ address, amount, pool, wethToken, squeethToken })
 
     _exactOutputParams.recipient = shortHelper
 

@@ -17,6 +17,7 @@ import { TradeSettings } from '@components/TradeSettings'
 import Confirmed from '../Confirmed'
 import TradeInfoItem from '../TradeInfoItem'
 import UniswapData from '../UniswapData'
+import { getSellQuoteForETH } from '../../../lib/squeethPool'
 import { PositionType } from '../../../types'
 
 const useStyles = makeStyles((theme) =>
@@ -484,7 +485,7 @@ const CloseLong: React.FC<BuyProps> = ({
 
   const classes = useStyles()
   const { swapRouter, oSqueeth } = useAddresses()
-  const { sell, getWSqueethPositionValue, getSellQuoteForETH } = useSqueethPool()
+  const { sell, getWSqueethPositionValue, pool, wethToken, squeethToken } = useSqueethPool()
 
   const {
     tradeAmount: amountInputValue,
@@ -512,15 +513,26 @@ const CloseLong: React.FC<BuyProps> = ({
   const isShort = squeethAmount.gt(0) && positionType === PositionType.SHORT
 
   useEffect(() => {
-    //if it's insufficient amount them set it to it's maximum
+    if (!pool || !wethToken || !squeethToken) return
     if (!open && oSqueethBal.lt(amount)) {
+    //if it's insufficient amount them set it to it's maximum
       setAmount(oSqueethBal.toString())
-      getSellQuoteForETH(oSqueethBal).then((val) => {
+      getSellQuoteForETH({ ETHAmount: oSqueethBal, pool, wethToken, squeethToken }).then((val) => {
         setAltTradeAmount(val.amountIn.toString())
         setConfirmedAmount(val.amountIn.toFixed(6).toString())
       })
     }
-  }, [oSqueethBal.toString(), open])
+  }, [
+    amount.toString(),
+    oSqueethBal.toString(),
+    open,
+    pool?.token1Price.toFixed(18),
+    setAltTradeAmount,
+    setAmount,
+    setConfirmedAmount,
+    squeethToken?.address,
+    wethToken?.address,
+  ])
 
   let openError: string | undefined
   let closeError: string | undefined

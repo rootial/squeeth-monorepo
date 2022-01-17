@@ -21,6 +21,7 @@ import { useTrade } from '@context/trade'
 import useInterval from './useInterval'
 import { useUsdAmount } from './useUsdAmount'
 import { useTransactionHistory } from './useTransactionHistory'
+import { getSellQuote, getBuyQuote } from '../lib/squeethPool'
 
 const bigZero = new BigNumber(0)
 
@@ -464,7 +465,7 @@ export const usePnL = () => {
   const { usdAmount: shortUsdAmt, realizedPNL: shortRealizedPNL, refetch: refetchShort } = useShortPositions()
   const { positionType, squeethAmount, wethAmount, shortVaults, loading: positionLoading } = usePositions()
   const { ethPrice } = useTrade()
-  const { ready, getSellQuote, getBuyQuote } = useSqueethPool()
+  const { ready, pool, wethToken, squeethToken } = useSqueethPool()
   const { swapTransactions: transactions } = useTransactionHistory()
   const { index } = useController()
 
@@ -484,12 +485,19 @@ export const usePnL = () => {
   }
 
   useEffect(() => {
-    if (!ready || positionLoading) return
+    if (!ready || positionLoading || !pool || !wethToken || !squeethToken) return
 
-    const p1 = getSellQuote(squeethAmount).then(setSellQuote)
-    const p2 = getBuyQuote(squeethAmount).then((val) => setBuyQuote(val.amountIn))
+    const p1 = getSellQuote({ squeethAmount, pool, wethToken, squeethToken }).then(setSellQuote)
+    const p2 = getBuyQuote({ squeethAmount, pool, wethToken, squeethToken }).then((val) => setBuyQuote(val.amountIn))
     Promise.all([p1, p2]).then(() => setLoading(false))
-  }, [ready, squeethAmount.toString(), shortVaults?.length, positionLoading])
+  }, [
+    pool?.token1Price.toFixed(18),
+    positionLoading,
+    ready,
+    squeethAmount.toString(),
+    squeethToken?.address,
+    wethToken?.address,
+  ])
 
   useEffect(() => {
     if (sellQuote.amountOut.isZero() && !loading) {

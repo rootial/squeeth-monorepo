@@ -8,6 +8,7 @@ import { useTokenBalance } from '@hooks/contracts/useTokenBalance'
 import { usePnL } from '@hooks/usePositions'
 import { useAddresses } from '@hooks/useAddress'
 import { PositionType, TradeType } from '../types'
+import { getBuyQuoteForETH, getSellQuote, getSellQuoteForETH, getBuyQuote } from '../lib/squeethPool'
 
 type Quote = {
   amountOut: BigNumber
@@ -123,16 +124,7 @@ const TradeProvider: React.FC = ({ children }) => {
   const [ethPrice, setETHPrice] = useState(new BigNumber(0))
   const [oSqueethBal, setOSqueethBal] = useState(new BigNumber(0))
 
-  const {
-    ready,
-    sell,
-    getBuyQuoteForETH,
-    buyForWETH,
-    getSellQuote,
-    getWSqueethPositionValue,
-    getBuyQuote,
-    getSellQuoteForETH,
-  } = useSqueethPool()
+  const { ready, pool, wethToken, squeethToken, getWSqueethPositionValue } = useSqueethPool()
   const { positionType } = usePnL()
   const { oSqueeth } = useAddresses()
   const _ethPrice = useETHPrice()
@@ -156,39 +148,73 @@ const TradeProvider: React.FC = ({ children }) => {
   }, [tradeSuccess, tradeType, isPositionOpen])
 
   useEffect(() => {
-    if (!ready) return
+    if (!ready || !pool || !wethToken || !squeethToken) return
     setInputQuoteLoading(true)
     //tradeType refers to which tab "Long" or "Short" is selected on the trade page
     //positionType refers to the user's actual position based on their squeeth balances and debt
     //isPositionOpen is true if the "Open" tab is selected on the trade page; otherwise it refers to the "Close" tab being selected
     if (tradeType === TradeType.LONG) {
       if (positionType === PositionType.SHORT) {
-        getBuyQuote(new BigNumber(tradeAmount), slippageAmount).then(setSellCloseQuote)
+        getBuyQuote({ squeethAmount: new BigNumber(tradeAmount), slippageAmount, pool, wethToken, squeethToken }).then(
+          setSellCloseQuote,
+        )
       } else if (isPositionOpen) {
-        getBuyQuoteForETH(new BigNumber(tradeAmount), slippageAmount).then(setQuote)
+        getBuyQuoteForETH({
+          ETHAmount: new BigNumber(tradeAmount),
+          slippageAmount,
+          pool,
+          wethToken,
+          squeethToken,
+        }).then(setQuote)
       } else {
-        getSellQuote(new BigNumber(tradeAmount), slippageAmount).then(setQuote)
+        getSellQuote({ squeethAmount: new BigNumber(tradeAmount), slippageAmount, pool, wethToken, squeethToken }).then(
+          setQuote,
+        )
       }
       if (isPositionOpen) {
         if (inputType === InputType.ETH) {
-          getBuyQuoteForETH(new BigNumber(tradeAmount), slippageAmount).then((val) => {
+          getBuyQuoteForETH({
+            ETHAmount: new BigNumber(tradeAmount),
+            slippageAmount,
+            pool,
+            wethToken,
+            squeethToken,
+          }).then((val) => {
             if (tradeAmount !== '0') setConfirmedAmount(val.amountOut.toFixed(6).toString())
             setInputQuote(val.amountOut.toString())
           })
         } else {
-          getBuyQuote(new BigNumber(altTradeAmount), slippageAmount).then((val) => {
+          getBuyQuote({
+            squeethAmount: new BigNumber(altTradeAmount),
+            slippageAmount,
+            pool,
+            wethToken,
+            squeethToken,
+          }).then((val) => {
             if (altTradeAmount !== '0') setConfirmedAmount(Number(altTradeAmount).toFixed(6).toString())
             setInputQuote(val.amountIn.toString())
           })
         }
       } else {
         if (inputType === InputType.ETH) {
-          getSellQuoteForETH(new BigNumber(altTradeAmount), slippageAmount).then((val) => {
+          getSellQuoteForETH({
+            ETHAmount: new BigNumber(altTradeAmount),
+            slippageAmount,
+            pool,
+            wethToken,
+            squeethToken,
+          }).then((val) => {
             if (altTradeAmount !== '0') setConfirmedAmount(val.amountIn.toFixed(6).toString())
             setInputQuote(val.amountIn.toString())
           })
         } else {
-          getSellQuote(new BigNumber(tradeAmount), slippageAmount).then((val) => {
+          getSellQuote({
+            squeethAmount: new BigNumber(tradeAmount),
+            slippageAmount,
+            pool,
+            wethToken,
+            squeethToken,
+          }).then((val) => {
             if (altTradeAmount !== '0') setConfirmedAmount(Number(tradeAmount).toFixed(6))
             setInputQuote(val.amountOut.toString())
           })
@@ -196,11 +222,17 @@ const TradeProvider: React.FC = ({ children }) => {
       }
     } else {
       if (positionType === PositionType.LONG) {
-        getSellQuote(new BigNumber(tradeAmount), slippageAmount).then(setQuote)
+        getSellQuote({ squeethAmount: new BigNumber(tradeAmount), slippageAmount, pool, wethToken, squeethToken }).then(
+          setQuote,
+        )
       } else if (isPositionOpen) {
-        getSellQuote(new BigNumber(tradeAmount), slippageAmount).then(setQuote)
+        getSellQuote({ squeethAmount: new BigNumber(tradeAmount), slippageAmount, pool, wethToken, squeethToken }).then(
+          setQuote,
+        )
       } else {
-        getBuyQuote(new BigNumber(tradeAmount), slippageAmount).then(setSellCloseQuote)
+        getBuyQuote({ squeethAmount: new BigNumber(tradeAmount), slippageAmount, pool, wethToken, squeethToken }).then(
+          setSellCloseQuote,
+        )
       }
     }
     setInputQuoteLoading(false)
