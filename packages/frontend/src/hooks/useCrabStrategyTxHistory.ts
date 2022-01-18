@@ -14,6 +14,8 @@ const getTxTitle = (type: string) => {
   if (type === CrabStrategyTxType.WITHDRAW) return 'Withdraw'
   if (type === CrabStrategyTxType.FLASH_DEPOSIT) return 'Flash Deposit'
   if (type === CrabStrategyTxType.FLASH_WITHDRAW) return 'Flash Withdraw'
+  if (type === CrabStrategyTxType.HEDGE_ON_UNISWAP) return 'Hedge on Uniswap'
+  if (type === CrabStrategyTxType.HEDGE) return 'Hedge'
 }
 
 export const useCrabStrategyTxHistory = () => {

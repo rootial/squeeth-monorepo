@@ -49,5 +49,10 @@ type CrabStrategyTx @entity {
   ethAmount: BigInt
   wSqueethAmount: BigInt
   owner: Bytes
+  isSellingSqueeth: Boolean
   timestamp: BigInt!
+  auctionPrice: BigInt
+  wSqueethHedgeTargetAmount: BigInt
+  ethHedgeTargetAmount: BigInt
+  hedgerPrice: BigInt
 }

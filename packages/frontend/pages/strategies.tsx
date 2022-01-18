@@ -166,11 +166,10 @@ const Strategies: React.FC = () => {
               <StrategyInfoItem
                 value={new Date(timeAtLastHedge * 1000).toLocaleString(undefined, {
                   day: 'numeric',
-                  month: 'numeric',
+                  month: 'short',
                   hour: 'numeric',
                   minute: 'numeric',
-                  timeZoneName: 'short',
-                  hour12: false,
+                  hour12: true,
                 })}
                 label="Last rebalanced at"
                 tooltip={new Date(timeAtLastHedge * 1000).toLocaleString(undefined, {
@@ -255,27 +254,6 @@ const Strategies: React.FC = () => {
                     tooltip="The strategy uses a uniswap flashswap to make a deposit. You can adjust slippage for this swap by clicking the gear icon"
                     unit="%"
                   />
-                  {/* <TextField
-                    size="small"
-                    value={slippage}
-                    type="number"
-                    style={{ width: 300, marginTop: '8px' }}
-                    onChange={(event) => setSlippage(Number(event.target.value))}
-                    id="filled-basic"
-                    label="Slippage"
-                    variant="outlined"
-                    error={slippage <= 0}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <Typography variant="caption">%</Typography>
-                        </InputAdornment>
-                      ),
-                    }}
-                    inputProps={{
-                      min: '0',
-                    }}
-                  /> */}
                   {depositOption === 0 ? (
                     <PrimaryButton
                       variant="contained"

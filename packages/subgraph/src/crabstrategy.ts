@@ -5,7 +5,9 @@ import {
   Withdraw,
   FlashDeposit,
   FlashWithdraw,
-  Transfer
+  Transfer,
+  HedgeOnUniswap,
+  Hedge
 } from "../generated/CrabStrategy/CrabStrategy"
 import { CrabStrategyTx } from "../generated/schema"
 
@@ -55,6 +57,31 @@ export function handleFlashWithdraw(event: FlashWithdraw): void {
   strategyTx.owner = event.transaction.from
   strategyTx.timestamp = event.block.timestamp
   strategyTx.type = 'FLASH_WITHDRAW'
+  strategyTx.save()
+}
+
+export function handleHedgeOnUniswap(event: HedgeOnUniswap): void {
+  const strategyTx = loadOrCreateTx(event.transaction.hash.toHex())
+  strategyTx.type = 'HEDGE_ON_UNISWAP'
+  strategyTx.wSqueethHedgeTargetAmount = event.params.wSqueethHedgeTargetAmount
+  strategyTx.ethHedgeTargetAmount = event.params.ethHedgetargetAmount
+  strategyTx.auctionPrice = event.params.auctionPrice
+  strategyTx.isSellingSqueeth = event.params.auctionType
+  strategyTx.owner = event.params.hedger
+  strategyTx.timestamp = event.block.timestamp
+  strategyTx.save()
+}
+
+export function handleHedge(event: Hedge): void {
+  const strategyTx = loadOrCreateTx(event.transaction.hash.toHex())
+  strategyTx.type = 'HEDGE'
+  strategyTx.wSqueethHedgeTargetAmount = event.params.wSqueethHedgeTargetAmount
+  strategyTx.ethHedgeTargetAmount = event.params.ethHedgetargetAmount
+  strategyTx.auctionPrice = event.params.auctionPrice
+  strategyTx.isSellingSqueeth = event.params.auctionType
+  strategyTx.hedgerPrice = event.params.hedgerPrice
+  strategyTx.owner = event.params.hedger
+  strategyTx.timestamp = event.block.timestamp
   strategyTx.save()
 }
 

@@ -12,9 +12,8 @@ import { useSqueethPool } from './useSqueethPool'
 
 export const useCrabStrategy = () => {
   const { web3, address, handleTransaction, networkId } = useWallet()
-  const { crabStrategy, squeethPool, weth } = useAddresses()
+  const { crabStrategy } = useAddresses()
   const { getVault, getCollatRatioAndLiqPrice } = useController()
-  const { getTwapSafe } = useOracle()
   const { getSellQuote, getBuyQuote } = useSqueethPool()
 
   const [contract, setContract] = useState<Contract>()
@@ -22,13 +21,9 @@ export const useCrabStrategy = () => {
   const [vault, setVault] = useState<Vault | null>(null)
   const [collatRatio, setCollatRatio] = useState(0)
   const [liquidationPrice, setLiquidationPrice] = useState(new BigNumber(0))
-  const [isPriceHedge, setIsPriceHedge] = useState(false)
-  const [isTimeHedge, setIsTimeHedge] = useState(false)
-  const [actionTriggerTime, setAuctionTriggerTime] = useState(0)
   const [timeAtLastHedge, setTimeAtLastHedge] = useState(0)
 
   useEffect(() => {
-    console.log(crabStrategy, !crabStrategy)
     if (!web3 || !crabStrategy) return
     setContract(new web3.eth.Contract(abi as any, crabStrategy))
   }, [crabStrategy, web3])
@@ -37,7 +32,7 @@ export const useCrabStrategy = () => {
     if (!contract) return
 
     setStrategyData()
-  }, [contract])
+  }, [contract, networkId, address])
 
   const setStrategyData = async () => {
     if (!contract) return
@@ -56,11 +51,6 @@ export const useCrabStrategy = () => {
         }
       })
     getTimeAtLastHedge().then(setTimeAtLastHedge)
-    const timeHedge = await checkTimeHedge()
-    const _isPriceHedge = await checkPriceHedge(1641105000)
-    setIsTimeHedge(timeHedge[0])
-    setIsPriceHedge(_isPriceHedge)
-    setAuctionTriggerTime(1641105000)
   }
 
   const getMaxCap = async () => {
@@ -167,26 +157,16 @@ export const useCrabStrategy = () => {
     })
   }
 
-  const priceHedgeOnUniswap = async () => {
-    return handleTransaction(
-      contract?.methods.priceHedgeOnUniswap(1641105000, 0, 0).send({
-        from: address,
-      }),
-    )
-  }
-
   return {
     maxCap,
     vault,
     collatRatio,
     liquidationPrice,
-    isTimeHedge,
-    isPriceHedge,
-    actionTriggerTime,
     timeAtLastHedge,
     deposit,
     flashDeposit,
     flashWithdraw,
-    priceHedgeOnUniswap,
+    checkPriceHedge,
+    checkTimeHedge,
   }
 }

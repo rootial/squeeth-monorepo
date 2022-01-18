@@ -94,6 +94,8 @@ dataSources:
         - FlashDeposit
         - FlashWithdraw
         - Transfer
+        - HedgeOnUniswap
+        - Hedge
       abis:
         - name: CrabStrategy
           file: ./abis/CrabStrategy.json
@@ -108,4 +110,8 @@ dataSources:
           handler: handleFlashWithdraw
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
+        - event: HedgeOnUniswap(indexed address,bool,uint256,uint256,uint256)
+          handler: handleHedgeOnUniswap
+        - event: Hedge(indexed address,bool,uint256,uint256,uint256,uint256)
+          handler: handleHedge
       file: ./src/crabstrategy.ts
